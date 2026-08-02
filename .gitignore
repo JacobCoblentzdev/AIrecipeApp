@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build output
+/dist/
+/build/
+/.next/
+/.nuxt/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Sensitive local app files
+recipe-voice-app/functions/index.js
+recipe-voice-app/functions/.runtimeconfig.json
+recipe-voice-app/src/firebase.js
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Test and cache folders
+coverage/
+.cache/
+.parcel-cache/
+.firebase/

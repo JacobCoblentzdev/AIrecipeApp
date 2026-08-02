@@ -7,15 +7,35 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
 *.local
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Sensitive local app files
+functions/index.js
+functions/.runtimeconfig.json
+src/firebase.js
+
+# Firebase and cache artifacts
+.firebase/
+.cache/
+.parcel-cache/
+coverage/
+*.tsbuildinfo
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
