@@ -19,10 +19,16 @@ jobs:
           node-version: '20'
 
       - name: Install Project Dependencies
+        with:
+          working-directory: ./recipe-voice-app
         run: npm install
 
       - name: Compile React & Tailwind CSS
+        with:
+          working-directory: ./recipe-voice-app
         run: npm run build
 
       - name: Move Files to Nginx Directory
+        with:
+          working-directory: ./recipe-voice-app
         run: cp -r dist/* /var/www/recipe-app/
