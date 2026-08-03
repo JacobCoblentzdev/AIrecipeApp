@@ -29,6 +29,6 @@ jobs:
         run: npm run build
 
       - name: Move Files to Nginx Directory
-        with:
-          working-directory: ./recipe-voice-app
-        run: cp -r dist/* /var/www/recipe-app/
+        working-directory: ./recipe-voice-app
+        run: |
+          cp -r dist/* /var/www/recipe-app/
