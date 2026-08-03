@@ -262,12 +262,12 @@ function App() {
           onClick={uploadSixRecipes}
           className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors"
         >
-          Push 6 New Recipes to Firebase
+          Push 6 New Recipes to F irebase
         </button>
       </div>
     );
   }
-
+ 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden text-slate-800 font-sans">
       <Navbar onNavigate={setCurrentPage} />
