@@ -15,7 +15,7 @@ node_modules/
 # Sensitive local app files
 recipe-voice-app/functions/index.js
 recipe-voice-app/functions/.runtimeconfig.json
-recipe-voice-app/src/firebase.js
+
 
 # Logs
 *.log
@@ -32,4 +32,4 @@ pnpm-debug.log*
 coverage/
 .cache/
 .parcel-cache/
-.firebase/
+
