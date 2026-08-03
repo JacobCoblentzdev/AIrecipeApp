@@ -23,10 +23,10 @@ dist-ssr/
 # Sensitive local app files
 functions/index.js
 functions/.runtimeconfig.json
-src/firebase.js
+
 
 # Firebase and cache artifacts
-.firebase/
+
 .cache/
 .parcel-cache/
 coverage/
