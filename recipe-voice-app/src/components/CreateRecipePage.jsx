@@ -1,18 +1,18 @@
 import { useState, useRef } from 'react';
-import { db, functions } from '../firebase';
+import { db, auth, functions } from '../firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { FiImage, FiPlus, FiClock, FiUsers, FiCamera } from 'react-icons/fi';
 import { LuChefHat } from "react-icons/lu";
 
-export default function CreateRecipePage({ onNavigate }) {
+export default function CreateRecipePage({ onNavigate, onRecipePublished }) {
   const [isPublishing, setIsPublishing] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const fileInputRef = useRef(null);
     const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
-    creator: 'Chef Maria', // You can hardcode the logged-in user here later
+    creator: auth.currentUser?.email,
     img: '',
     tags: '', // We will treat this as a comma-separated string in the form for simplicity
     difficulty: 'Easy',
@@ -70,6 +70,7 @@ export default function CreateRecipePage({ onNavigate }) {
           setFormData(prev => ({
             ...prev,
             title: aiRecipe.title || prev.title,
+            creator: aiRecipe.creator || prev.creator,
             subtitle: aiRecipe.subtitle || prev.subtitle,
             time: aiRecipe.time || prev.time,
             difficulty: aiRecipe.difficulty || prev.difficulty,
@@ -139,21 +140,34 @@ export default function CreateRecipePage({ onNavigate }) {
   }
 
   const handlePublish = async () => {
-    if(!formData.title || !formData.subtitle || !formData.img || !formData.time || !formData.servings) {
-      alert('Please fill in all required fields.');
-      return;
-    }
+    const missingRequiredFields =
+    !formData.title ||
+    !formData.subtitle ||
+    !formData.img ||
+    !formData.time ||
+    !formData.servings;
+
+  if (missingRequiredFields) {
+    alert('Please fill in all required fields.');
+    return; // exits only this handler
+  }
     setIsPublishing(true);
     try {
       const formattedData = {
         ...formData,
-          tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
       };
-      await addDoc(collection(db, 'recipes'), formattedData);
+      console.log('Publishing recipe:', formattedData);
+      const docRef = await addDoc(collection(db, 'recipes'), formattedData);
+      console.log('Published recipe ID:', docRef.id);
       alert('Recipe published successfully!');
-      onNavigate('home'); // Navigate back to home or another page after publishing
+      if (typeof onRecipePublished === 'function') {
+        await onRecipePublished();
+      }
+      onNavigate('dashboard');
     } catch (error) {
       console.error('Error publishing recipe:', error);
+      alert(`Failed to publish recipe. ${error?.message || 'Please try again.'}`);
     } finally {
       setIsPublishing(false);
     }

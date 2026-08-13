@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-// Import the database connection and Firestore querying tools
-import { db } from './firebase';
+// Import the database connection and Firebase auth tools
+import { db, auth } from './firebase';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 import Navbar from './components/Navbar';
 import SideBar from './components/SideBar';
 import RecipePage from './components/RecipePage';
 import ExplorePage from './components/ExplorePage';
 import CreateRecipePage from './components/CreateRecipePage';
+import { useAuth } from "./AuthContext";
+import SignIn from "./components/SignIn";
 
 const SIX_NEW_RECIPES = [
   {
@@ -175,8 +178,13 @@ const SIX_NEW_RECIPES = [
 ];
 
 function App() {
+  const { currentUser } = useAuth();
+  if (!currentUser) {
+    return <SignIn />;
+  }
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [activeRecipeId, setActiveRecipeId] = useState(null);
+  const [user, setUser] = useState(null);
   
   // 1. NEW STATE: Hold the recipes from the database
   const [recipes, setRecipes] = useState([]);
@@ -200,57 +208,65 @@ function App() {
   };
 
   // 2. THE FETCH LOGIC
-  useEffect(() => {
-    const fetchRecipes = async () => {
-      try {
-        // Point to the "recipes" collection in your Firestore database
-        const recipesCollection = collection(db, 'recipes');
-        const recipeSnapshot = await getDocs(recipesCollection);
-        
-        const recipeList = recipeSnapshot.docs.map(doc => {
-          const data = doc.data();
+  const fetchRecipes = async () => {
+    try {
+      // Point to the "recipes" collection in your Firestore database
+      const recipesCollection = collection(db, 'recipes');
+      const recipeSnapshot = await getDocs(recipesCollection);
+      
+      const recipeList = recipeSnapshot.docs.map(doc => {
+        const data = doc.data();
 
-          return {
-            id: doc.id,
-            title: data.title || 'Untitled recipe',
-            subtitle: data.subtitle || '',
-            creator: data.creator || 'Anonymous Chef',
-            time: data.time || 'TBD',
-            rating: data.rating || 0,
-            reviews: data.reviews || 0,
-            servings: data.servings || '1',
-            difficulty: data.difficulty || 'Easy',
-            img: data.img || '',
-            tags: Array.isArray(data.tags) ? data.tags : (Array.isArray(data.Tags) ? data.Tags : []),
-            instructions: Array.isArray(data.instructions) ? data.instructions : [],
-            ingredients: Array.isArray(data.ingredients)
-              ? data.ingredients.map(section => ({
-                  category: section.category || 'Ingredients',
-                  items: Array.isArray(section.items)
-                    ? section.items
-                    : (Array.isArray(section.Items) ? section.Items : [])
-                }))
-              : []
-          };
-        });
+        return {
+          id: doc.id,
+          title: data.title || 'Untitled recipe',
+          subtitle: data.subtitle || '',
+          creator: data.creator || 'Anonymous Chef',
+          time: data.time || 'TBD',
+          rating: data.rating || 0,
+          reviews: data.reviews || 0,
+          servings: data.servings || '1',
+          difficulty: data.difficulty || 'Easy',
+          img: data.img || '',
+          tags: Array.isArray(data.tags) ? data.tags : (Array.isArray(data.Tags) ? data.Tags : []),
+          instructions: Array.isArray(data.instructions) ? data.instructions : [],
+          ingredients: Array.isArray(data.ingredients)
+            ? data.ingredients.map(section => ({
+                category: section.category || 'Ingredients',
+                items: Array.isArray(section.items)
+                  ? section.items
+                  : (Array.isArray(section.Items) ? section.Items : [])
+              }))
+            : []
+        };
+      });
 
-        console.log('Firestore docs count:', recipeSnapshot.size);
-        console.log('Fetched recipes from Firestore:', JSON.stringify(recipeList, null, 2));
-        setRecipes(recipeList);
-        
-        // Set the first recipe as active if the list isn't empty
-        if (recipeList.length > 0) {
-          setActiveRecipeId(recipeList[0].id);
-        }
-      } catch (error) {
-        console.error("Error fetching recipes:", error);
-      } finally {
-        setLoading(false);
+      console.log('Firestore docs count:', recipeSnapshot.size);
+      console.log('Fetched recipes from Firestore:', JSON.stringify(recipeList, null, 2));
+      setRecipes(recipeList);
+      
+      // Set the first recipe as active if the list isn't empty
+      if (recipeList.length > 0) {
+        setActiveRecipeId(recipeList[0].id);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchRecipes();
   }, []); // Empty array ensures we only fetch once when the app loads
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const activeRecipe = recipes.find(recipe => recipe.id === activeRecipeId);
 
@@ -299,7 +315,7 @@ function App() {
             />
           </main>
         ) : currentPage === 'create-recipe' ? (
-          <CreateRecipePage onNavigate={setCurrentPage} />
+          <CreateRecipePage onNavigate={setCurrentPage} onRecipePublished={fetchRecipes} />
         ) : null }
       </div>
     </div>
